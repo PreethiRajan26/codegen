@@ -76,7 +76,7 @@ task codeGen {
                             daos true
                         }
                         target() {
-                            packageName('com.example.codeGen.Model')
+                            packageName('com.example.codegen.Model')
                             directory('src/main/java')
                         }
                     }
