@@ -1,0 +1,90 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.jooq:jooq-codegen:3.11.9'
+        classpath 'org.codehaus.groovy:groovy-all:3.0.9'
+        classpath 'org.postgresql:postgresql:42.2.5'
+        classpath 'org.glassfish.jaxb:jaxb-runtime:2.4.0-b180830.0438'
+    }
+}
+plugins {
+    id 'org.springframework.boot' version '2.7.3'
+    id 'io.spring.dependency-management' version '1.0.13.RELEASE'
+    id 'java'
+}
+
+group = 'com.example.codegen'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '18'
+
+configurations {
+    developmentOnly
+    runtimeClasspath {
+        extendsFrom developmentOnly
+    }
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+ext {
+    set('springCloudVersion', "Hoxton.SR3")
+}
+
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-jooq'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    runtimeOnly 'org.postgresql:postgresql:42.2.5'
+    implementation 'org.jooq:jooq-codegen-maven:3.17.3'
+    implementation 'org.jooq:jooq-meta:3.17.3'
+    implementation 'org.jooq:jooq:3.13.3'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'org.jooq:jooq-codegen:3.11.9'
+}
+
+//import groovy.xml.MarkupBuilder
+import org.jooq.codegen.GenerationTool
+
+import static org.jooq.impl.DSL.user
+task codeGen {
+    doLast {
+        println 'Generating jooq code'
+        def writer = new StringWriter()
+        def xml = new groovy.xml.MarkupBuilder(writer)
+                .configuration('xmlns': 'http://www.jooq.org/xsd/jooq-codegen-3.13.0.xsd') {
+                    jdbc() {
+                        driver('org.postgresql.Driver')
+                        url('jdbc postgresql://localhost:5432/Textile?currentSchema=public')
+                        user('postgres')
+                        password('tanvye')
+                    }
+                    generator {
+                        database() {
+                            inputSchema('public')
+
+                        }
+                        generate([:]) {
+                            pojos true
+                            daos true
+                        }
+                        target() {
+                            packageName('com.example.codeGen.Model')
+                            directory('src/main/java')
+                        }
+                    }
+
+                }
+         //GenerationTool.generate(
+        //javax.xml.bind.JAXB.unmarshal(new StringReader(writer.toString()),org.jooq.util.jaxb.Configuration.class) )
+        GenerationTool.generate(writer.toString())
+        println 'jooq code generated successfully'
+    }
+}
